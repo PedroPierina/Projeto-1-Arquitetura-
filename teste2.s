@@ -2,7 +2,7 @@
 array1: .space 3200 #$t2
 id: .space 4 #$t3
 pos: .space 4 #t4
-pos2: .space 4
+pos2: .space 4#usada pra tanto print quanto excluir
 
 msg0: .asciiz "\tControle de Gastos\n"
 msg1: .ascii "\t\t1) Registrar Despesas\n\t\t2) Excluir Despesas\n\t\t3) Listar Despesas\n\t\t4) Exibir Gasto Mensal\n\t\t"
@@ -12,6 +12,8 @@ msg3: .asciiz "\nInsira o mes:"
 msg4: .asciiz "\nInsira o ano:"
 msg5: .asciiz "\nInsira o valor gasto:"
 msg6: .asciiz "\nInsira o tipo de gasto:"
+msg7: .asciiz "\nInsira o ID a excluir:"
+msg8: .asciiz "\nID nao cadastrado"
 msg9: .asciiz "/"
 msg10: .asciiz "\n"
 
@@ -238,15 +240,61 @@ ContinuaRD: #acho o id zero
 	add $a1, $zero, 16#limita pra 16 bytes o tamanho da string
 	syscall
 
-#---------------------------------------
 	j main # retorna para a main
-
+#-----------------------------------------------------------------------------Exclui Despesas---------------------------------------------
 ExcluirDespesas:
-	add $t0, $zero,$v0
-	li $v0, 1
-	add $a0, $zero, 2
+	la $t4, pos2 #zera o ID no comeco do programa
+	sw $zero, 0($t4)
+	
+	la $t2, array1
+	lh $s2, 0($t2)
+	
+	li $v0, 4     # Codigo SysCall p/ escrever strings
+	la $a0, msg7  #Passa a msg para o parametro a0
 	syscall
+	
+	li $v0,5 #pega ID
+	syscall
+	
+	add $s0,$zero,$v0 #Passa id pra s0
+ProcuraID:
+	beq $s0,$s2,ExcluidID # compara se o id digitado e o mesmo que o registrado
+	
+	la $t4,pos2
+	lw $s1,0($t4)
+	
+	la $t2, array1
+	addi $s1,$s1,32 #atualiza a pos2
+	add $t2,$t2,$s1
+	lh $s2, 0($t2) #pega o id da proxima posicao 
+
+	la $t4, pos2
+	sw $s1,0($t4) #salva a pos2 atualizada
+	
+	la $t4, pos
+	lw $s5,0($t4) #pega o valor da pos
+	
+	beq $s5,$s1,$saimain #compara se a pos2 e a mesma que a pos, logo chego no fim do cadastro e nao achou o id
+	
+	j ProcuraID
+	
+ExcluidID:
+	la $t4,pos2
+	lw $s1,0($t4) #pega a posicao salva em pos2
+	
+	la $t2, array1
+	add $t2,$t2,$s1 # vai pra posicao do array indicada por pos2
+	sw $zero, 0($t2)#zera o id
+	
 	j main # retorna para a main
+	
+saimain:
+	li $v0, 4     # Codigo SysCall p/ escrever strings
+	la $a0, msg7  #Passa a msg para o parametro a0
+	syscall
+	
+	j main
+#-----------------------------------------------------------------------------ListaDespesas---------------------------------------------
 ListarDespesas:
 	#print para testes
 	la $t4, pos2 #zera o ID no comeco do programa
