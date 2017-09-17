@@ -279,7 +279,7 @@ ProcuraID:
 	lw $s1,0($t4)
 
 	la $t2, array1
-	addi $s1,$s1,32 #atualiza a pos2
+	addi $s1, $s1, 32 #atualiza a pos2
 	add $t2,$t2,$s1
 	lh $s2, 0($t2) #pega o id da proxima posicao
 
@@ -289,7 +289,7 @@ ProcuraID:
 	la $t4, pos
 	lw $s5,0($t4) #pega o valor da pos
 
-	beq $s5,$s1,$saimain #compara se a pos2 e a mesma que a pos, logo chego no fim do cadastro e nao achou o id
+	beq $s5, $s1, SaiMain #compara se a pos2 e a mesma que a pos, logo chego no fim do cadastro e nao achou o id
 
 	j ProcuraID
 
@@ -298,12 +298,13 @@ ExcluidID:
 	lw $s1,0($t4) #pega a posicao salva em pos2
 
 	la $t2, array1
-	add $t2,$t2,$s1 # vai pra posicao do array indicada por pos2
-	sw $zero, 0($t2)#zera o id
+	add $t2, $t2, $s1 # vai pra posicao do array indicada por pos2
+	addi $s3, $zero, -1
+	sw $s3, 0($t2)# coloca -1 no ID
 
 	j main # retorna para a main
 
-saimain:
+SaiMain:
 	li $v0, 4     # Codigo SysCall p/ escrever strings
 	la $a0, msg7  #Passa a msg para o parametro a0
 	syscall
@@ -321,6 +322,7 @@ ListarDespesas:
 	lh $s2, 0($t2)
 
 ContinuaBuscaLD:
+#addi $s5, $zero, -1
 bne $s2, $zero, ContinuaLD #compara se eh zero
 
 j main
@@ -453,16 +455,17 @@ Sair:
 	#---------------Bubble Sort-------------------------------------------------------------------------
 BubbleSort:
 	la $a0, array1
-	lw $a1, tam
+	la $s3, tam
+	lw $a1, 0($s3)
 	j bubble
 
-bubble: li $s0, 0               # (s0) i = 0
+bubble: move $s0, $zero      # (s0) i = 0
 	move $t6, $zero
 
-eloop:  bge $s0, $a1, excluiMenos1       # break if i >= vecsz
-	li  $s1, 0
+eloop:  bge $s0, $a1, excluiMenos1    # break if i >= tam
+	move  $s1, $zero
 
-iloop:  bge $s1, $a1 endiloop   # break if j >= vecsz (vecsz >= j)
+iloop:  bge $s1, $a1 endiloop   # break if j >= tam (tam >= j)
 
 	sll $t1, $s0, 5         # t1 = i * 32 (para indexar o vetor)
 	sll $t2, $s1, 5         # t2 = j * 32 (para indexar o vetor)
@@ -470,11 +473,11 @@ iloop:  bge $s1, $a1 endiloop   # break if j >= vecsz (vecsz >= j)
 	add $t1, $a0, $t1       # endereço de vec[i] => t1 = vec + i * 4
 	add $t2, $a0, $t2       # endereço de vec[j] => t2 = vec + j * 4
 
-	lw $t3, ($t1)           # t3 = vec[i]
-	lw $t4, ($t2)           # t4 = vec[j]
+	lw $t3, 0($t1)          # t3 = vec[i]
+	lw $t4, 0($t2)          # t4 = vec[j]
 
 	addi $t5, $zero, -1
-	beq $t3, $t5, swapi  #id igual -1
+	beq $t3, $t5, swapi     #id igual -1
 
 	addi $t1, $t1, 8
 	addi $t2, $t2, 8
@@ -499,6 +502,8 @@ swap:
 	addi $t1,$t1, 4
 	addi $t2,$t2, 4
 
+	lw $t3, ($t1)
+	lw $t4, ($t2)
 
 	sw $t3, ($t2)
 	sw $t4, ($t1)          #mes e ano swap
@@ -506,11 +511,17 @@ swap:
 	addi $t1,$t1, 4
 	addi $t2,$t2, 4
 
+	lw $t3, ($t1)
+	lw $t4, ($t2)
+
 	sw $t3, ($t2)
 	sw $t4, ($t1)           #data formatada swap
 
 	addi $t1,$t1, 4
 	addi $t2,$t2, 4
+
+	lw $t3, ($t1)
+	lw $t4, ($t2)
 
 	sw $t3, ($t2)
 	sw $t4, ($t1)           #salario swap
@@ -518,11 +529,17 @@ swap:
 	addi $t1,$t1, 4
 	addi $t2,$t2, 4
 
-	sw $t3, ($t2)
-	sw $t4, ($t1)           #part1 string swap
+	l.s $f3, ($t1)
+	l.s $f4, ($t2)
+
+	s.s $f3, ($t2)
+	s.s $f4, ($t1)           #part1 string swap
 
 	addi $t1,$t1, 4
 	addi $t2,$t2, 4
+
+	lw $t3, ($t1)
+	lw $t4, ($t2)
 
 	sw $t3, ($t2)
 	sw $t4, ($t1)           #part2 string swap
@@ -530,11 +547,17 @@ swap:
 	addi $t1,$t1, 4
 	addi $t2,$t2, 4
 
+	lw $t3, ($t1)
+	lw $t4, ($t2)
+
 	sw $t3, ($t2)
 	sw $t4, ($t1)           #part3 string swap
 
 	addi $t1,$t1, 4
 	addi $t2,$t2, 4
+
+	lw $t3, ($t1)
+	lw $t4, ($t2)
 
 	sw $t3, ($t2)
 	sw $t4, ($t1)           #part4 string swap
@@ -545,7 +568,7 @@ endiloop:
 	j eloop
 excluiMenos1:
 	beq $t6, $zero, end
-	la $a0, vec
+	la $a0, array1
 
 	addi $a1, $a1, -1 # numero de elementos -1
 	mul $t7, $a1, 32
