@@ -14,7 +14,7 @@ msg4: .asciiz "\nInsira o ano:"
 msg5: .asciiz "\nInsira o valor gasto:"
 msg6: .asciiz "\nInsira o tipo de gasto:"
 msg7: .asciiz "\nInsira o ID a excluir:"
-msg8: .asciiz "\nID nao cadastrado"
+msg8: .asciiz "\nID nao cadastrado\n"
 msg9: .asciiz "/"
 msg10: .asciiz "\n"
 
@@ -73,6 +73,8 @@ main:
 
 	addi $t0, $zero,7
 	beq $t0,$v0,Sair #caso t0 e v0 sejam iguais da um jump
+
+	j main
 #------------------------------------------------------------------------------------------------------
 # dentro dos labels so tem uma funcao teste para saber se entro no label certo
 
@@ -82,6 +84,9 @@ la $t2, array1
 
 addi $s0, $zero, 0 #pega o primeiro ID
 lh $s2, 0($t2)
+
+la $t4, pos #
+sw $zero, 0($t4)
 
 ContinuaBuscaRD:
 beq $s2, $zero, ContinuaRD #compara se eh zero
@@ -227,10 +232,6 @@ ContinuaRD: #acho o id zero
 
 	s.s $f4, 0($t2)
 
-	li $v0, 4     # Codigo SysCall p/ escrever strings
-	la $a0, msg10  #Passa a msg para o parametro a0
-	syscall
-
 #--------------PEGANDO STRING------------------------------
 	li $v0, 4     # Codigo SysCall p/ escrever strings
 	la $a0, msg6  #Passa a msg para o parametro a0
@@ -251,12 +252,6 @@ ContinuaRD: #acho o id zero
 	j main # retorna para a main
 #-----------------------------------------------------------------------------Exclui Despesas---------------------------------------------
 ExcluirDespesas:
-	la $t4, tam
-	lw $s0, 0($t4)
-
-	sub $s0, $s0, 1
-
-	sw $s0, 0($t4)
 
 	la $t4, pos2 #zera o ID no comeco do programa
 	sw $zero, 0($t4)
@@ -289,24 +284,40 @@ ProcuraID:
 	la $t4, pos
 	lw $s5,0($t4) #pega o valor da pos
 
+	addi $s5, $s5, 32
+
 	beq $s5, $s1, SaiMain #compara se a pos2 e a mesma que a pos, logo chego no fim do cadastro e nao achou o id
 
 	j ProcuraID
 
 ExcluidID:
+
 	la $t4,pos2
 	lw $s1,0($t4) #pega a posicao salva em pos2
 
 	la $t2, array1
 	add $t2, $t2, $s1 # vai pra posicao do array indicada por pos2
-	addi $s3, $zero, -1
-	sw $s3, 0($t2)# coloca -1 no ID
+	addi $s3, $zero, 0
+	sh $s3, 0($t2)# coloca -1 no ID
+
+	addi $t2, $t2, 8
+	addi $s3, $zero, 365
+	mul $s3, $s3, 3000
+	sh $s3, 0($t2)# coloca -1 no ID
+	addi $t2, $t2, -8
+
+	jal BubbleSort
+
+	la $t0, tam
+	lw $t1, 0($t0)
+	addi $t1, $t1, -1
+	sw $t1, 0($t0)
 
 	j main # retorna para a main
 
 SaiMain:
 	li $v0, 4     # Codigo SysCall p/ escrever strings
-	la $a0, msg7  #Passa a msg para o parametro a0
+	la $a0, msg8  #Passa a msg para o parametro a0
 	syscall
 
 	j main
@@ -457,12 +468,12 @@ BubbleSort:
 	la $a0, array1
 	la $s3, tam
 	lw $a1, 0($s3)
-	j bubble
 
 bubble: move $s0, $zero      # (s0) i = 0
 	move $t6, $zero
 
-eloop:  bge $s0, $a1, excluiMenos1    # break if i >= tam
+eloop:
+  bge $s0, $a1, endBubble    # break if i >= tam
 	move  $s1, $zero
 
 iloop:  bge $s1, $a1 endiloop   # break if j >= tam (tam >= j)
@@ -473,11 +484,9 @@ iloop:  bge $s1, $a1 endiloop   # break if j >= tam (tam >= j)
 	add $t1, $a0, $t1       # endereço de vec[i] => t1 = vec + i * 4
 	add $t2, $a0, $t2       # endereço de vec[j] => t2 = vec + j * 4
 
-	lw $t3, 0($t1)          # t3 = vec[i]
-	lw $t4, 0($t2)          # t4 = vec[j]
+	lw $t3, 0($t1)          # t3 = vec[i] id
+	lw $t4, 0($t2)          # t4 = vec[j] id
 
-	addi $t5, $zero, -1
-	beq $t3, $t5, swapi     #id igual -1
 
 	addi $t1, $t1, 8
 	addi $t2, $t2, 8
@@ -492,9 +501,12 @@ iloop:  bge $s1, $a1 endiloop   # break if j >= tam (tam >= j)
 
 	addi $s1, $s1, 1 # j++
 	j iloop
-swapi:
-	addi $t6, $t6, 1
+
+
 swap:
+
+	lw $t3, ($t1)
+	lw $t4, ($t2)
 
 	sw $t3, ($t2)           #id e dia swap
 	sw $t4, ($t1)
@@ -562,21 +574,14 @@ swap:
 	sw $t3, ($t2)
 	sw $t4, ($t1)           #part4 string swap
 
+	addi $s1, $s1, 1        # j++
+	j iloop
 
 endiloop:
 	addi $s0, $s0, 1        # i++
 	j eloop
-excluiMenos1:
-	beq $t6, $zero, end
-	la $a0, array1
 
-	addi $a1, $a1, -1 # numero de elementos -1
-	mul $t7, $a1, 32
-	add $t7, $a0, $t7 #soma a pos 0 numero de elementos
-	sw $zero, ($t7) # salva zero no id
-	addi $t6, $t6, -1 # numero de -1, reduz em 1
-	j excluiMenos1
-end:
+endBubble:
 	jr $ra
 
 	#---------------STRCMP------------------------------------------------------------------------------
