@@ -1,8 +1,11 @@
 .data
 array1: .space 3200 #$t2
+categorias: .space 1600 #$t5 array para definir as categorias
 id: .space 4 #$t3
 pos: .space 4 #t4
 pos2: .space 4#usada pra tanto print quanto excluir
+pos3: .space 4
+pos4: .space 4
 tam: .space 4 #tamanho do array
 
 msg0: .asciiz "\tControle de Gastos\n"
@@ -248,6 +251,8 @@ ContinuaRD: #acho o id zero
 	addi $a0, $a0, 16 #salva na posicao de memoria passada para a0 + 16 bytes
 	add $a1, $zero, 16#limita pra 16 bytes o tamanho da string
 	syscall
+
+	jal listarCategorias
 
 	j main # retorna para a main
 #-----------------------------------------------------------------------------Exclui Despesas---------------------------------------------
@@ -583,6 +588,83 @@ endiloop:
 
 endBubble:
 	jr $ra
+
+listarCategorias:
+  la $t4,pos
+  lw $s5,0($t4)
+	addi $s5,$zero,32
+
+	la $t4, pos
+	lw $s7, 0($t4)
+	addi $s7, $s7, 16
+
+	la $t5,pos3
+	lw $s3,0($t5)
+
+	addi $s3,$zero,16
+
+	la $t0,pos4
+	addi $s2, $zero, 0
+	sw $s2, 0($t0)
+
+	beq $s6,$zero,insere
+	j compara
+comparacat:
+	beq $s2, $s3,insere
+
+	la $t4, pos
+	lw $s7, 0($t4)
+	addi $s7, $s7, 16
+
+	add $s2,$s2,4
+compara:
+	la $t2, array1
+	add $t2, $t2, $s7
+	lw $s6, 0($t2)
+
+	beq $s7,$s5,fimcat
+
+	la $t6,categorias
+	add $t6,$t6,$s2
+	lw $s1,0($t6)
+
+	bne $s1, $s6,comparacat
+
+	addi $s7,$s7,4
+	addi $s0,$s0,4
+
+j compara
+
+insere:
+	la $t4,pos
+	lw $s5,0($t4)
+	addi $s5,$zero,32
+
+	la $t4, pos
+	lw $s7, 0($t4)
+	addi $s7, $s7, 16
+
+	la $t5,pos3
+	lw $s0, 0($t5)
+
+loopcat:
+	la $t2, array1
+	add $t2, $t2, $s7
+	lw $s6, 0($t2)
+
+	beq $s7,$s5,fimcat
+
+	la $t6,categorias
+	add $t6,$t6,$s0
+	sw $s6,0($t6)
+
+	addi $s7,$s7,4
+	addi $s0,$s0,4
+	j loopcat
+
+fimcat:
+ jr $ra
+
 
 	#---------------STRCMP------------------------------------------------------------------------------
 # STRCMP: #$a0 String 1, $a1 String 2, $v0 = 0 se igual, $v0 = 1 se diferente
