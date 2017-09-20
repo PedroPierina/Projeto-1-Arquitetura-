@@ -589,10 +589,11 @@ endiloop:
 endBubble:
 	jr $ra
 
+#--------------------------------------------------------------------------
 listarCategorias:
   la $t4,pos
   lw $s5,0($t4)
-	addi $s5,$zero,32
+	addi $s5, $s5, 32
 
 	la $t4, pos
 	lw $s7, 0($t4)
@@ -601,13 +602,13 @@ listarCategorias:
 	la $t5,pos3
 	lw $s3,0($t5)
 
-	addi $s3,$zero,16
+	addi $s3, $s3, 16
 
 	la $t0,pos4
 	addi $s2, $zero, 0
 	sw $s2, 0($t0)
 
-	beq $s6,$zero,insere
+	beq $s6, $zero, insere
 	j compara
 comparacat:
 	beq $s2, $s3,insere
@@ -638,7 +639,7 @@ j compara
 insere:
 	la $t4,pos
 	lw $s5,0($t4)
-	addi $s5,$zero,32
+	addi $s5, $s5,32
 
 	la $t4, pos
 	lw $s7, 0($t4)
@@ -664,7 +665,6 @@ loopcat:
 
 fimcat:
  jr $ra
-
 
 	#---------------STRCMP------------------------------------------------------------------------------
 # STRCMP: #$a0 String 1, $a1 String 2, $v0 = 0 se igual, $v0 = 1 se diferente
