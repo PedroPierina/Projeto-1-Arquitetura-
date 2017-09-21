@@ -1,11 +1,11 @@
 .data
 array1: .space 3200 #$t2
-categorias: .space 1600 #$t5 array para definir as categorias
+categorias: .space 2000 #$t5 array para definir as categorias
 id: .space 4 #$t3
 pos: .space 4 #t4
-pos2: .space 4#usada pra tanto print quanto excluir
-pos3: .space 4
-pos4: .space 4
+pos2: .space 4 #usada pra tanto print quanto excluir
+pos3: .space 4 #posicao final
+pos4: .space 4 #usado para andar no arry categorias
 tam: .space 4 #tamanho do array
 
 msg0: .asciiz "\tControle de Gastos\n"
@@ -328,7 +328,35 @@ SaiMain:
 	j main
 #-----------------------------------------------------------------------------ListaDespesas---------------------------------------------
 ListarDespesas:
+	la $t2,categorias
 
+	li $v0,4
+	la $a0, 0($t2)#passa a string salva no byte 16 pra a0 e printa
+	syscall
+	li $v0, 4     # Codigo SysCall p/ escrever strings
+	la $a0, msg10  #Passa a msg para o parametro a0
+	syscall
+	li $v0,4
+	la $a0, 16($t2)#passa a string salva no byte 16 pra a0 e printa
+	syscall
+	li $v0, 4     # Codigo SysCall p/ escrever strings
+	la $a0, msg10  #Passa a msg para o parametro a0
+	syscall
+	li $v0,4
+	la $a0, 32($t2)#passa a string salva no byte 16 pra a0 e printa
+	syscall
+	li $v0, 4     # Codigo SysCall p/ escrever strings
+	la $a0, msg10 #Passa a msg para o parametro a0
+	syscall
+	li $v0,4
+	la $a0, 48($t2)#passa a string salva no byte 16 pra a0 e printa
+	syscall
+	li $v0, 4     # Codigo SysCall p/ escrever strings
+	la $a0, msg10 #Passa a msg para o parametro a0
+	syscall
+	li $v0,4
+	la $a0, 64($t2)#passa a string salva no byte 16 pra a0 e printa
+	syscall
 	jal BubbleSort
 	#print para testes
 	la $t4, pos2 #zera o ID no comeco do programa
@@ -454,10 +482,32 @@ ExibirGastoMensal:
 	syscall
 	j main # retorna para a main
 ExibirgastosPorCategoria:
-	add $t0, $zero,$v0
-	li $v0, 1
-	addi $a0, $zero, 5
-	syscall
+la $t2,categorias
+
+li $v0,4
+la $a0, 0($t2)#passa a string salva no byte 16 pra a0 e printa
+syscall
+
+li $v0, 6
+l.s $f12, 16($t2)
+syscall
+
+li $v0,4
+la $a0, 20($t2)#passa a string salva no byte 16 pra a0 e printa
+syscall
+
+li $v0, 6
+l.s $f12, 36($t2)
+syscall
+
+li $v0,4
+la $a0, 40($t2)#passa a string salva no byte 16 pra a0 e printa
+syscall
+
+li $v0, 6
+l.s $f12, 56($t2)
+syscall
+
 	j main # retorna para a main
 ExibirRankingPorDespesas:
 	add $t0, $zero,$v0
@@ -604,9 +654,14 @@ listarCategorias:
 
 	addi $s3, $s3, 16
 
+	la $t5,pos3
+	lw $s6,0($t5)
+
 	la $t0,pos4
 	addi $s2, $zero, 0
 	sw $s2, 0($t0)
+
+	addi $s4,$zero, 0
 
 	beq $s6, $zero, insere
 	j compara
@@ -617,13 +672,14 @@ comparacat:
 	lw $s7, 0($t4)
 	addi $s7, $s7, 16
 
-	add $s2,$s2,4
+	sub $s2,$s2,$s4
+	addi $s2,$s2,20
 compara:
+	beq $s7,$s5,somafloat
+
 	la $t2, array1
 	add $t2, $t2, $s7
 	lw $s6, 0($t2)
-
-	beq $s7,$s5,fimcat
 
 	la $t6,categorias
 	add $t6,$t6,$s2
@@ -632,8 +688,8 @@ compara:
 	bne $s1, $s6,comparacat
 
 	addi $s7,$s7,4
-	addi $s0,$s0,4
-
+	addi $s2,$s2,4
+	addi $s4,$s4,4
 j compara
 
 insere:
@@ -653,7 +709,7 @@ loopcat:
 	add $t2, $t2, $s7
 	lw $s6, 0($t2)
 
-	beq $s7,$s5,fimcat
+	beq $s7,$s5,fimcatinsere
 
 	la $t6,categorias
 	add $t6,$t6,$s0
@@ -663,6 +719,31 @@ loopcat:
 	addi $s0,$s0,4
 	j loopcat
 
+fimcatinsere:
+ la $t5,pos3
+ sw $s0, 0($t5)
+ j fimcat
+
+ somafloat:
+ 	la $t5,pos3
+ 	sw $s0, 0($t5)
+			
+ 	la $t0,pos
+	lw $s1,0($t0)
+	addi $s1,$s1,12
+
+ 	la $t6,array1
+	add $t6,$t6,$s1
+	l.s $f0,0($t6)
+
+	la $t2,categorias
+	sub $s0,$s0,4
+	add $t2,$t2,$s0
+
+	l.s $f1,0($t2)
+	add.s $f1,$f1,$f0
+
+	s.s $f1,0($t2)
 fimcat:
  jr $ra
 
