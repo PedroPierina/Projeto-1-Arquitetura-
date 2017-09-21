@@ -330,6 +330,11 @@ SaiMain:
 #-----------------------------------------------------------------------------ListaDespesas---------------------------------------------
 ListarDespesas:
 
+	la $t2, categorias
+
+	li $v0,4
+	la $a0, 0($t2)#passa a string salva no byte 16 pra a0 e printa
+	syscall
 	jal BubbleSort
 	#print para testes
 	la $t4, pos2 #zera o ID no comeco do programa
@@ -457,14 +462,17 @@ ExibirGastoMensal:
 ExibirgastosPorCategoria:
 
 	addi $s7, $s7,0
-	la $t4, pos4
+	la $t4, pos2		#zera pos
+	sw $s7, 0($t4)
+
+	la $t4, pos4    #zera pos
 	sw $s7, 0($t4)
 
 	addi $s5, $zero, 16
 
 	la $t5,pos  		#pega a a ultima posicao de array1
 	lw $s3,0($t5)
-	addi $s3, $s3, 32
+	addi $s3, $s3, 31
 
 	la $t5,array1
 	lw $s6,0($t5)
@@ -475,26 +483,38 @@ ExibirgastosPorCategoria:
 
 	beq $s6, $zero, fimpcat	#verifica se array1 esta vazio
 	j comparap
+
 	comparapcat:
-	beq $s2, $s3,SomaCat
+	li $v0,4
+	la $a0,msg12
+	syscall
+
+	j fimpcat
+	beq $s2, $s3,fimpcat
 
 	la $t4, pos4
 	lw $s7, 0($t4)
 
 	sub $t6,$t6,$s4
 	addi $t6,$t6,32
-
+	add $s4,$s4,$zero
 	comparap:
+	li $v0,4
+	la $a0,msg9
+	syscall
 	la $t2, categorias
 	add $t2, $t2, $s7
 	lw $s6, 0($t2)
 
-	beq $s7,$s5,SomaCat#arruma
+	beq $s7,$s5,fimpcat#arruma
 
 	la $t6,array1
 	add $t6,$t6,$s2
 	lw $s1,0($t6)
 
+	li $v0,4
+	la $a0,0($t6)
+	syscall
 	bne $s1, $s6,comparapcat
 
 	addi $s7,$s7,4
@@ -530,27 +550,6 @@ ExibirgastosPorCategoria:
 	la $a0,0($t4)
 	syscall
 
-	mov.s $f12,$f0
-
-	li $v0,2
-	syscall
-
-	la $t4, pos3
-	lw $s4, 0($t4)
-
-	addi $s7,$s7,16
-	addi $s4,$s4,16
-
-	beq $s7,$s4,fimpcat
-
-	la $t4, pos4
-	sw $s7, 0($t4)
-	addi $s5,$s5,16
-
-	la $t5,array1
-	lw $s6,0($t5)
-
-	j comparap
 	fimpcat:
 	j main # retorna para a main
 ExibirRankingPorDespesas:
